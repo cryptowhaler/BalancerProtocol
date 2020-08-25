@@ -1,8 +1,7 @@
-.
+// Builds new BPools, logging their addresses and providing `isBPool(address) -> (bool)`
 
 pragma solidity 0.5.12;
 
-// Builds new BPools, logging their addresses and providing `isBPool(address) -> (bool)`
 
 import "./BPool.sol";
 
