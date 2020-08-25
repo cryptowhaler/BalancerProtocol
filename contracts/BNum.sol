@@ -1,14 +1,10 @@
-
-
-
-.
-
 pragma solidity 0.5.12;
 
 import "./BConst.sol";
 
 contract BNum is BConst {
 
+    // Divides a by 10**18 (returns integer). pure means cannot read or write. Used only for calculation
     function btoi(uint a)
         internal pure 
         returns (uint)
@@ -16,6 +12,7 @@ contract BNum is BConst {
         return a / BONE;
     }
 
+    // Returns integer. pure means cannot read or write. Used only for calculation
     function bfloor(uint a)
         internal pure
         returns (uint)
@@ -23,6 +20,7 @@ contract BNum is BConst {
         return btoi(a) * BONE;
     }
 
+    // Addition. require needs to be true to continue. Aborted if false
     function badd(uint a, uint b)
         internal pure
         returns (uint)
@@ -32,6 +30,7 @@ contract BNum is BConst {
         return c;
     }
 
+    //subtraction
     function bsub(uint a, uint b)
         internal pure
         returns (uint)
@@ -41,6 +40,7 @@ contract BNum is BConst {
         return c;
     }
 
+    //returns based on sign
     function bsubSign(uint a, uint b)
         internal pure
         returns (uint, bool)

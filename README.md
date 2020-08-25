@@ -12,6 +12,21 @@ your portfolio by following arbitrage opportunities.
 
 Balancer is based on an N-dimensional invariant surface which is a generalization of the constant product formula described by Vitalik Buterin and proven viable by the popular Uniswap dapp.
 
+## BColor.sol 
+--> no imports, 1 external function returning Bronze
+
+## BConst.sol 
+--> imports BColor.sol & extends BBronze. Defines public constant values.
+
+## BNum.sol 
+--> has mathematical calculations (each is internal pure)
+
+
+
+
+
+
+
 ## Documentation
 
 The full documentation can be found at [https://docs.balancer.finance](https://docs.balancer.finance)
