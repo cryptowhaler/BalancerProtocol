@@ -33,10 +33,12 @@ export function jsonParse(input, fallback?) {
   }
 }
 
+//used to shorten addresses
 export function shorten(str = '') {
   return `${str.slice(0, 6)}...${str.slice(str.length - 4)}`;
 }
 
+//big number
 export function bnum(val: string | number | BigNumber): BigNumber {
   return new BigNumber(val.toString());
 }
@@ -51,27 +53,15 @@ export function toWei(val: string | BigNumber): BigNumber {
   return scale(bnum(val.toString()), 18).integerValue();
 }
 
-export function denormalizeBalance(
-  amount: BigNumber,
-  tokenDecimals: number
-): BigNumber {
+export function denormalizeBalance( amount: BigNumber, tokenDecimals: number): BigNumber {
   return scale(bnum(amount), tokenDecimals);
 }
 
-export function normalizeBalance(
-  amount: BigNumber,
-  tokenDecimals: number
-): BigNumber {
+export function normalizeBalance(amount: BigNumber,tokenDecimals: number): BigNumber {
   return scale(bnum(amount), -tokenDecimals);
 }
 
-export function isLocked(
-  allowances,
-  tokenAddress,
-  spender,
-  rawAmount,
-  decimals
-) {
+export function isLocked(allowances,tokenAddress,spender,rawAmount,decimals) {
   const tokenAllowance = allowances[tokenAddress];
   if (!tokenAllowance || !tokenAllowance[spender]) {
     return true;
@@ -83,6 +73,8 @@ export function isLocked(
   return amount.gt(tokenAllowance[spender]);
 }
 
+
+
 export function formatPool(pool) {
   let colorIndex = 0;
   pool.tokens = pool.tokens.map(token => {
@@ -91,22 +83,25 @@ export function formatPool(pool) {
     const configToken = config.tokens[token.checksum];
     if (configToken) {
       token.color = configToken.color;
-    } else {
+    } 
+    else {
       token.color = unknownColors[colorIndex];
       colorIndex++;
     }
     return token;
   });
-  if (pool.shares) pool.holders = pool.shares.length;
+
+  if (pool.shares) 
+    pool.holders = pool.shares.length;
+
   pool.tokensList = pool.tokensList.map(token => getAddress(token));
   pool.lastSwapVolume = 0;
-  const poolTotalSwapVolume =
-    pool.swaps && pool.swaps[0] && pool.swaps[0].poolTotalSwapVolume
-      ? parseFloat(pool.swaps[0].poolTotalSwapVolume)
-      : 0;
+  const poolTotalSwapVolume = pool.swaps && pool.swaps[0] && pool.swaps[0].poolTotalSwapVolume ? parseFloat(pool.swaps[0].poolTotalSwapVolume) : 0;
   pool.lastSwapVolume = parseFloat(pool.totalSwapVolume) - poolTotalSwapVolume;
   return pool;
 }
+
+
 
 export async function getMarketChartFromCoinGecko(address) {
   const ratePerDay = {};
@@ -120,10 +115,12 @@ export async function getMarketChartFromCoinGecko(address) {
       ratePerDay[day] = p[1];
     });
     return ratePerDay;
-  } catch (e) {
+  } 
+  catch (e) {
     return Promise.reject();
   }
 }
+
 
 export function isValidAddress(str) {
   try {
@@ -168,6 +165,7 @@ export function getTokenBySymbol(symbol) {
   return config.tokens[tokenAddress];
 }
 
+
 export function getTokenLogoUrl(address: string): string | null {
   let trustwalletId: string | null = null;
   if (address === 'ether') {
@@ -179,14 +177,17 @@ export function getTokenLogoUrl(address: string): string | null {
       trustwalletId = checksum;
     }
   }
-  if (!trustwalletId) return null;
+  if (!trustwalletId) 
+    return null;
   return `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${trustwalletId}/logo.png`;
 }
+
 
 export function etherscanLink(str: string, type = 'address'): string {
   const network = config.network === 'homestead' ? '' : `${config.network}.`;
   return `https://${network}etherscan.io/${type}/${str}`;
 }
+
 
 export const isTxRejected = error => {
   if (!error) {
@@ -195,12 +196,14 @@ export const isTxRejected = error => {
   return error.code === 4001 || error.code === -32603;
 };
 
+
 export const isTxReverted = error => {
   if (!error) {
     return false;
   }
   return error.code === -32016;
 };
+
 
 export function formatFilters(filters, fb) {
   if (!filters) return fb || {};
