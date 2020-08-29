@@ -1,12 +1,9 @@
 <template>
   <div id="app" class="overflow-hidden">
-    <UiLoading v-if="ui.loading || !ui.init" class="overlay big" />
-    <div v-else>
+    <!-- <UiLoading v-if="ui.loading || !ui.init" class="overlay big" /> -->
+    <!-- <div v-else> -->
       <Topnav />
-      <div
-        class="d-flex flex-row pb-6"
-        :style="ui.sidebarIsOpen && 'max-height: 100vh'"
-      >
+      <div class="d-flex flex-row pb-6"  :style="ui.sidebarIsOpen && 'max-height: 100vh'" >
         <div
           class="shell d-block d-xl-none"
           :class="ui.sidebarIsOpen && 'sidebar-is-open'"
@@ -15,7 +12,7 @@
         <Sidebar :key="$router.currentRoute.fullPath" />
         <router-view id="view" class="flex-auto" />
       </div>
-    </div>
+    <!-- </div> -->
     <Notifications />
   </div>
 </template>
