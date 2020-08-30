@@ -25,27 +25,26 @@ const mutations = {
 };
 
 const actions = {
+
   init: async ({ commit, dispatch }) => {
     commit('SET', { loading: true });
-    const tokenIds = Object.keys(config.tokens)
-      .map(tokenAddress => config.tokens[tokenAddress].id)
-      .filter(tokenId => !!tokenId);
-    await Promise.all([
-      dispatch('getBalancer'),
-      dispatch('loadPricesById', tokenIds),
-      dispatch('initTokenMetadata')
-    ]);
+    const tokenIds = Object.keys(config.tokens).map(tokenAddress => config.tokens[tokenAddress].id).filter(tokenId => !!tokenId);
+    await Promise.all([ dispatch('getBalancer'), dispatch('loadPricesById', tokenIds), dispatch('initTokenMetadata') ]);
     await dispatch('loadBackupProvider');
     const connector = await Vue.prototype.$auth.getConnector();
-    if (connector) await dispatch('login', connector);
+    if (connector) 
+      await dispatch('login', connector);
     commit('SET', { loading: false, init: true });
   },
+
   loading: ({ commit }, payload) => {
     commit('SET', { loading: payload });
   },
+
   toggleSidebar: ({ commit }) => {
     commit('SET', { sidebarIsOpen: !state.sidebarIsOpen });
   },
+  
   hideSidebar: ({ commit }) => {
     commit('SET', { sidebarIsOpen: false });
   }

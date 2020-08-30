@@ -8,15 +8,19 @@ import { shorten, trunc, etherscanLink } from '@/helpers/utils';
 const modules = Object.entries(store.state).map(module => module[0]);
 
 export default {
+
   data() {
     return {
       config
     };
   },
+
   computed: {
     ...mapState(modules)
   },
+
   methods: {
+
     _num(number, key) {
       let format = '(0.[00000]a)';
       format = number > 1 ? '(0.[0000]a)' : format;
@@ -31,25 +35,33 @@ export default {
         .format(format)
         .toUpperCase();
     },
+
     _shorten(str: string): string {
       return shorten(str);
     },
+
     _trunc(value: number, decimals: number): number {
       return trunc(value, decimals);
     },
+
     _etherscanLink(str: string, type: string): string {
       return etherscanLink(str, type);
     },
+
     _ticker(address: string): string {
       if (address === 'ether') return 'ETH';
       const token = config.tokens[address];
       return token ? token.symbol : this._shorten(address);
     },
+
     _precision(rawValue: number, address: string): number {
       const tokenConfig = config.tokens[address] || {};
       const precision = tokenConfig.precision || config.defaultPrecision;
       const value = rawValue.toFixed(precision);
       return parseFloat(value);
     }
+
   }
 };
+// Homestead is the second major version release of the Ethereum platform, which includes several protocol 
+// changes and a networking change that gives us the ability to do further network upgrades: EIP-2 Main homestead hardfork changes

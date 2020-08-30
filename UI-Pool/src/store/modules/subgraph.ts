@@ -103,31 +103,33 @@ const mutations = {
   }
 };
 
+
+
 const actions = {
+
+  // Graph protocol
   getBalancer: async ({ commit }) => {
     commit('GET_BALANCER_REQUEST');
     try {
       const { balancer } = await request('getBalancer');
-      balancer.privatePoolCount =
-        balancer.poolCount - balancer.finalizedPoolCount;
+      balancer.privatePoolCount = balancer.poolCount - balancer.finalizedPoolCount;
       commit('GET_BALANCER_SUCCESS', balancer);
-    } catch (e) {
+    } 
+    catch (e) {
       commit('GET_BALANCER_FAILURE', e);
     }
   },
+
+  // Graph protocol
   getPool: async ({ commit }, payload) => {
     const ts = Math.round(new Date().getTime() / 1000);
     const tsYesterday = ts - 24 * 3600;
     const query = {
       pool: {
-        __args: {
-          id: payload.toLowerCase()
-        },
+        __args: { id: payload.toLowerCase() },
         swaps: {
           __args: {
-            where: {
-              timestamp_lt: tsYesterday
-            }
+            where: { timestamp_lt: tsYesterday }
           }
         }
       }
@@ -141,31 +143,22 @@ const actions = {
       pool = formatPool(pool);
       commit('GET_POOL_SUCCESS');
       return pool;
-    } catch (e) {
+    } 
+    catch (e) {
       commit('GET_POOL_FAILURE', e);
     }
   },
+
+  // Graph protocol
   getPools: async ({ commit }, payload) => {
-    const {
-      first = ITEMS_PER_PAGE,
-      page = 1,
-      orderBy = 'liquidity',
-      orderDirection = 'desc',
-      where = {}
-    } = payload;
+    const { first = ITEMS_PER_PAGE, page = 1, orderBy = 'liquidity',  orderDirection = 'desc', where = {} } = payload;
     const skip = (page - 1) * first;
     const ts = Math.round(new Date().getTime() / 1000);
     const tsYesterday = ts - 24 * 3600;
     where.tokensList_not = [];
     const query = {
       pools: {
-        __args: {
-          where,
-          first,
-          skip,
-          orderBy,
-          orderDirection
-        },
+        __args: { where,  first, skip, orderBy,  orderDirection },
         swaps: {
           __args: {
             where: {
@@ -181,10 +174,13 @@ const actions = {
       pools = pools.map(pool => formatPool(pool));
       commit('GET_POOLS_SUCCESS');
       return pools;
-    } catch (e) {
+    } 
+    catch (e) {
       commit('GET_POOLS_FAILURE', e);
     }
   },
+
+  // Graph protocol
   getMyPools: async ({ commit }) => {
     commit('GET_MY_POOLS_REQUEST');
     try {
@@ -198,10 +194,13 @@ const actions = {
       ];
       commit('GET_MY_POOLS_SUCCESS', myPools);
       return myPools;
-    } catch (e) {
+    } 
+    catch (e) {
       commit('GET_MY_POOLS_FAILURE', e);
     }
   },
+
+  // Graph protocol  
   getMyPoolShares: async ({ commit, rootState }) => {
     const address = rootState.web3.account;
     commit('GET_MY_POOLS_SHARES_REQUEST');
@@ -220,68 +219,53 @@ const actions = {
       poolShares.forEach(share => (balances[share.poolId.id] = share.balance));
       commit('GET_MY_POOLS_SHARES_SUCCESS', balances);
       return poolShares;
-    } catch (e) {
+    } 
+    catch (e) {
       commit('GET_MY_POOLS_SHARES_FAILURE', e);
     }
   },
+
+  // Graph protocol
   getPoolSwaps: async ({ commit }, payload) => {
     commit('GET_POOLS_SWAPS_REQUEST');
     try {
-      const {
-        first = ITEMS_PER_PAGE,
-        page = 1,
-        orderBy = 'timestamp',
-        orderDirection = 'desc',
-        where = {}
-      } = payload;
+      const { first = ITEMS_PER_PAGE, page = 1, orderBy = 'timestamp', orderDirection = 'desc', where = {} } = payload;
       const skip = (page - 1) * first;
       const query = {
         swaps: {
-          __args: {
-            where,
-            first,
-            skip,
-            orderBy,
-            orderDirection
-          }
+          __args: { where, first, skip, orderBy, orderDirection }
         }
       };
       const { swaps } = await request('getPoolSwaps', query);
       commit('GET_POOLS_SWAPS_SUCCESS');
       return swaps;
-    } catch (e) {
+    } 
+    catch (e) {
       commit('GET_POOLS_SWAPS_FAILURE', e);
     }
   },
+
+
   getPoolShares: async ({ commit }, payload) => {
     commit('GET_POOLS_SHARES_REQUEST');
     try {
-      const {
-        first = ITEMS_PER_PAGE,
-        page = 1,
-        orderBy = 'balance',
-        orderDirection = 'desc',
-        where = {}
-      } = payload;
+      const { first = ITEMS_PER_PAGE, page = 1, orderBy = 'balance',  orderDirection = 'desc', where = {} } = payload;
       const skip = (page - 1) * first;
       const query = {
         poolShares: {
-          __args: {
-            where,
-            first,
-            skip,
-            orderBy,
-            orderDirection
-          }
+          __args: { where, first, skip, orderBy, orderDirection }
         }
       };
       const { poolShares } = await request('getPoolShares', query);
       commit('GET_POOLS_SHARES_SUCCESS');
       return poolShares;
-    } catch (e) {
+    } 
+    catch (e) {
       commit('GET_POOLS_SHARES_FAILURE', e);
     }
   },
+
+  // Graph protocol
   getPoolMetrics: async ({ commit }, payload) => {
     commit('GET_POOLS_METRICS_REQUEST');
     try {
@@ -297,11 +281,7 @@ const actions = {
             first: 1,
             orderBy: 'timestamp',
             orderDirection: 'desc',
-            where: {
-              poolAddress: payload,
-              timestamp_gt: timestamp / 1000,
-              timestamp_lt: (timestamp + day) / 1000
-            }
+            where: {  poolAddress: payload, timestamp_gt: timestamp / 1000, timestamp_lt: (timestamp + day) / 1000 }
           },
           poolTotalSwapVolume: true,
           poolTotalSwapFee: true,
@@ -311,10 +291,13 @@ const actions = {
       const poolMetrics = await request('getPoolMetrics', query);
       commit('GET_POOLS_METRICS_SUCCESS');
       return poolMetrics;
-    } catch (e) {
+    } 
+    catch (e) {
       commit('GET_POOLS_METRICS_FAILURE', e);
     }
   },
+
+  // Graph protocol  
   getTokens: async ({ commit }) => {
     commit('GET_TOKENS_REQUEST');
     try {
@@ -322,13 +305,11 @@ const actions = {
       tokenPrices = Object.fromEntries(
         tokenPrices
           .sort((a, b) => b.poolLiquidity - a.poolLiquidity)
-          .map(tokenPrice => [
-            getAddress(tokenPrice.id),
-            parseFloat(tokenPrice.price)
-          ])
+          .map(tokenPrice => [ getAddress(tokenPrice.id), parseFloat(tokenPrice.price) ])
       );
       commit('GET_TOKENS_SUCCESS', tokenPrices);
-    } catch (e) {
+    } 
+    catch (e) {
       commit('GET_TOKENS_FAILURE', e);
     }
   }

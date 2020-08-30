@@ -26,6 +26,7 @@ const state = {
 };
 
 const mutations = {
+  // Logout 
   LOGOUT(_state) {
     Vue.set(_state, 'injectedLoaded', false);
     Vue.set(_state, 'injectedChainId', null);
@@ -176,7 +177,11 @@ const mutations = {
   }
 };
 
+
+
 const actions = {
+
+  // connecting
   login: async ({ dispatch }, connector = 'injected') => {
     auth = getInstance();
     await auth.login(connector);
@@ -185,35 +190,29 @@ const actions = {
       await dispatch('loadWeb3');
     }
   },
+
+  //logout
   logout: async ({ commit }) => {
     Vue.prototype.$auth.logout();
     commit('LOGOUT');
     commit('CLEAR_USER');
   },
+
+  // token data
   initTokenMetadata: async ({ commit }) => {
     const metadata = Object.fromEntries(
       Object.entries(config.tokens).map(tokenEntry => {
         const { decimals, symbol, name } = tokenEntry[1] as any;
-        return [
-          tokenEntry[0],
-          {
-            decimals,
-            symbol,
-            name,
-            whitelisted: true
-          }
-        ];
+        return [ tokenEntry[0], { decimals,symbol,name,whitelisted: true} ];
       })
     );
     commit('LOAD_TOKEN_METADATA_SUCCESS', metadata);
   },
+
+  // Load token data
   loadTokenMetadata: async ({ commit }, tokens) => {
     commit('LOAD_TOKEN_METADATA_REQUEST');
-    const multi = new Contract(
-      config.addresses.multicall,
-      abi['Multicall'],
-      web3
-    );
+    const multi = new Contract(config.addresses.multicall, abi['Multicall'], web3);
     const calls = [];
     const testToken = new Interface(abi.TestToken);
     tokens.forEach(token => {
@@ -228,37 +227,28 @@ const actions = {
     try {
       const [, response] = await multi.aggregate(calls);
       for (let i = 0; i < tokens.length; i++) {
-        const [decimals] = testToken.decodeFunctionResult(
-          'decimals',
-          response[3 * i]
-        );
-        const [symbol] = testToken.decodeFunctionResult(
-          'symbol',
-          response[3 * i + 1]
-        );
-        const [name] = testToken.decodeFunctionResult(
-          'name',
-          response[3 * i + 2]
-        );
-        tokenMetadata[tokens[i]] = {
-          decimals,
-          symbol,
-          name
-        };
+        const [decimals] = testToken.decodeFunctionResult('decimals',response[3 * i]);
+        const [symbol] = testToken.decodeFunctionResult('symbol',response[3 * i + 1]);
+        const [name] = testToken.decodeFunctionResult('name',response[3 * i + 2]);
+        tokenMetadata[tokens[i]] = { decimals, symbol, name};
       }
       commit('LOAD_TOKEN_METADATA_SUCCESS', tokenMetadata);
       return tokenMetadata;
-    } catch (e) {
+    } 
+    catch (e) {
       commit('LOAD_TOKEN_METADATA_FAILURE', e);
       return Promise.reject();
     }
   },
+
+  // Web3
   loadWeb3: async ({ commit, dispatch }) => {
     commit('LOAD_WEB3_REQUEST');
     try {
       if (!web3 || !auth.provider) {
         await dispatch('loadBackupProvider');
-      } else {
+      } 
+      else {
         await dispatch('loadProvider');
         if (!state.injectedLoaded || state.injectedChainId !== config.chainId) {
           await dispatch('loadBackupProvider');
@@ -267,15 +257,19 @@ const actions = {
       if (state.injectedChainId === config.chainId)
         await dispatch('loadAccount');
       commit('LOAD_WEB3_SUCCESS');
-    } catch (e) {
+    } 
+    catch (e) {
       commit('LOAD_WEB3_FAILURE', e);
       return Promise.reject();
     }
   },
+
+  // Load Provider
   loadProvider: async ({ commit, dispatch }) => {
     commit('LOAD_PROVIDER_REQUEST');
     try {
-      if (auth.provider.removeAllListeners) auth.provider.removeAllListeners();
+      if (auth.provider.removeAllListeners) 
+        auth.provider.removeAllListeners();
       if (auth.provider && auth.provider.on) {
         auth.provider.on('chainChanged', async () => {
           commit('HANDLE_CHAIN_CHANGED');
@@ -287,7 +281,8 @@ const actions = {
         auth.provider.on('accountsChanged', async accounts => {
           if (accounts.length === 0) {
             if (state.active) await dispatch('loadWeb3');
-          } else {
+          } 
+          else {
             commit('HANDLE_ACCOUNTS_CHANGED', accounts[0]);
             await dispatch('loadAccount');
           }
@@ -307,42 +302,42 @@ const actions = {
       const network = await web3.getNetwork();
       const accounts = await web3.listAccounts();
       const account = accounts.length > 0 ? accounts[0] : null;
-      commit('LOAD_PROVIDER_SUCCESS', {
-        injectedLoaded: true,
-        injectedChainId: network.chainId,
-        account
-      });
-    } catch (e) {
+      commit('LOAD_PROVIDER_SUCCESS', { injectedLoaded: true,  injectedChainId: network.chainId, account });
+    } 
+    catch (e) {
       commit('LOAD_PROVIDER_FAILURE', e);
       return Promise.reject();
     }
   },
+
+  // Load backUp provider
   loadBackupProvider: async ({ commit }) => {
     commit('LOAD_BACKUP_PROVIDER_REQUEST');
     try {
       web3 = wsProvider;
       const network = await web3.getNetwork();
-      commit('LOAD_BACKUP_PROVIDER_SUCCESS', {
-        injectedActive: false,
-        backUpLoaded: true,
-        account: null,
-        activeChainId: network.chainId
-      });
-    } catch (e) {
+      commit('LOAD_BACKUP_PROVIDER_SUCCESS', { injectedActive: false, backUpLoaded: true, account: null, activeChainId: network.chainId});
+    } 
+    catch (e) {
       commit('LOAD_BACKUP_PROVIDER_FAILURE', e);
       return Promise.reject();
     }
   },
+
+  // Address LookUp
   lookupAddress: async ({ commit }) => {
     commit('LOOKUP_ADDRESS_REQUEST');
     try {
       const name = await web3.lookupAddress(state.account);
       commit('LOOKUP_ADDRESS_SUCCESS', name);
       return name;
-    } catch (e) {
+    } 
+    catch (e) {
       commit('LOOKUP_ADDRESS_FAILURE', e);
     }
   },
+
+  // Resolve Name
   resolveName: async ({ commit }, payload) => {
     commit('RESOLVE_NAME_REQUEST');
     try {
@@ -354,34 +349,25 @@ const actions = {
       return Promise.reject();
     }
   },
-  sendTransaction: async (
-    { commit },
-    [contractType, contractAddress, action, params, overrides]
-  ) => {
+
+  // Send Transaction
+  sendTransaction: async ({ commit }, [contractType, contractAddress, action, params, overrides] ) => {
     commit('SEND_TRANSACTION_REQUEST');
     try {
       const signer = web3.getSigner();
-      const contract = new Contract(
-        getAddress(contractAddress),
-        abi[contractType],
-        web3
-      );
+      const contract = new Contract( getAddress(contractAddress), abi[contractType], web3);
       const contractWithSigner = contract.connect(signer);
-
       // Gas estimation
-      const gasLimitNumber = await contractWithSigner.estimateGas[action](
-        ...params,
-        overrides
-      );
+      const gasLimitNumber = await contractWithSigner.estimateGas[action](...params, overrides);
       const gasLimit = gasLimitNumber.toNumber();
       const safeGasLimit = Math.floor(gasLimit * (1 + GAS_LIMIT_BUFFER));
       overrides.gasLimit = safeGasLimit;
-
       const tx = await contractWithSigner[action](...params, overrides);
       await tx.wait();
       commit('SEND_TRANSACTION_SUCCESS');
       return tx;
-    } catch (e) {
+    } 
+    catch (e) {
       if (isTxRejected(e)) {
         commit('SEND_TRANSACTION_REJECTED', e);
         return Promise.reject();
@@ -390,6 +376,8 @@ const actions = {
       return Promise.reject(e);
     }
   },
+
+  // Load Account
   loadAccount: async ({ dispatch }) => {
     if (!state.account) {
       return;
@@ -405,20 +393,16 @@ const actions = {
       dispatch('getMyPoolShares')
     ]);
   },
+
+  // Get Balances
   getBalances: async ({ commit }, tokens) => {
     commit('GET_BALANCES_REQUEST');
     const address = state.account;
     const promises: any = [];
-    const multi = new Contract(
-      config.addresses.multicall,
-      abi['Multicall'],
-      web3
-    );
+    const multi = new Contract( config.addresses.multicall, abi['Multicall'], web3);
     const calls = [];
     const testToken = new Interface(abi.TestToken);
-    const tokensToFetch = tokens
-      ? tokens
-      : Object.keys(state.balances).filter(token => token !== 'ether');
+    const tokensToFetch = tokens ? tokens : Object.keys(state.balances).filter(token => token !== 'ether');
     tokensToFetch.forEach(token => {
       // @ts-ignore
       calls.push([token, testToken.encodeFunctionData('balanceOf', [address])]);
@@ -434,21 +418,21 @@ const actions = {
       let i = 0;
       response.forEach(value => {
         if (tokensToFetch && tokensToFetch[i]) {
-          const balanceNumber = testToken.decodeFunctionResult(
-            'balanceOf',
-            value
-          );
+          const balanceNumber = testToken.decodeFunctionResult( 'balanceOf', value );
           balances[tokensToFetch[i]] = balanceNumber.toString();
         }
         i++;
       });
       commit('GET_BALANCES_SUCCESS', balances);
       return balances;
-    } catch (e) {
+    } 
+    catch (e) {
       commit('GET_BALANCES_FAILURE', e);
       return Promise.reject();
     }
   },
+
+  // Get Allowances
   getAllowances: async ({ commit }, { tokens, spender }) => {
     commit('GET_ALLOWANCES_REQUEST');
     if (!spender) {
@@ -456,11 +440,7 @@ const actions = {
     }
     const address = state.account;
     const promises: any = [];
-    const multi = new Contract(
-      config.addresses.multicall,
-      abi['Multicall'],
-      web3
-    );
+    const multi = new Contract( config.addresses.multicall, abi['Multicall'], web3 );
     const calls = [];
     const testToken = new Interface(abi.TestToken);
     tokens.forEach(token => {
@@ -478,10 +458,7 @@ const actions = {
       let i = 0;
       response.forEach(value => {
         if (tokens && tokens[i]) {
-          const tokenAllowanceNumber = testToken.decodeFunctionResult(
-            'allowance',
-            value
-          );
+          const tokenAllowanceNumber = testToken.decodeFunctionResult( 'allowance', value );
           if (!allowances[tokens[i]]) {
             allowances[tokens[i]] = {};
           }
@@ -491,24 +468,24 @@ const actions = {
       });
       commit('GET_ALLOWANCES_SUCCESS', allowances);
       return allowances;
-    } catch (e) {
+    } 
+    catch (e) {
       commit('GET_ALLOWANCES_FAILURE', e);
       return Promise.reject();
     }
   },
+
+  // Get Proxy
   getProxy: async ({ commit }) => {
     commit('GET_PROXY_REQUEST');
     const address = state.account;
     try {
-      const dsProxyRegistryContract = new Contract(
-        config.addresses.dsProxyRegistry,
-        abi['DSProxyRegistry'],
-        web3
-      );
+      const dsProxyRegistryContract = new Contract( config.addresses.dsProxyRegistry, abi['DSProxyRegistry'], web3 );
       const proxy = await dsProxyRegistryContract.proxies(address);
       commit('GET_PROXY_SUCCESS', proxy);
       return proxy;
-    } catch (e) {
+    } 
+    catch (e) {
       commit('GET_PROXY_FAILURE', e);
       return Promise.reject();
     }

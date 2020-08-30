@@ -9,9 +9,11 @@ const state = {
 };
 
 const mutations = {
+
   GET_PRICE_REQUEST() {
     console.debug('GET_PRICE_REQUEST');
   },
+
   GET_PRICE_SUCCESS(_state, payload) {
     for (const address in payload) {
       const price = payload[address];
@@ -22,6 +24,7 @@ const mutations = {
 };
 
 const actions = {
+  // Getting prices from coingecko
   loadPricesById: async ({ commit }, payload) => {
     commit('GET_PRICE_REQUEST');
     const idString = payload.join('%2C');
@@ -30,7 +33,8 @@ const actions = {
       const url = `${ENDPOINT}/simple/price?ids=${idString}&vs_currencies=usd`;
       const response = await fetch(url);
       data = await response.json();
-    } catch (e) {
+    } 
+    catch (e) {
       return;
     }
     const idToAddressMap = {};
@@ -49,6 +53,8 @@ const actions = {
     }
     commit('GET_PRICE_SUCCESS', prices);
   },
+
+
   loadPricesByAddress: async ({ commit }, payload) => {
     commit('GET_PRICE_REQUEST');
     const contractString = payload.join('%2C');
@@ -57,7 +63,8 @@ const actions = {
       const url = `${ENDPOINT}/simple/token_price/ethereum?contract_addresses=${contractString}&vs_currencies=usd`;
       const response = await fetch(url);
       data = await response.json();
-    } catch (e) {
+    } 
+    catch (e) {
       return;
     }
     const prices = {};

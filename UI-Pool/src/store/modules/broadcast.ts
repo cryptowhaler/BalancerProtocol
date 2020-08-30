@@ -97,23 +97,22 @@ const mutations = {
   }
 };
 
+// Proxy creation, new pool creation, Joining pools, JoinSwap, ExitPool, ExitSwap, Approve, Wrap Eth & Unwrap Eth functionality
+
 const actions = {
+
+  // Creating a proxy functionality
   createProxy: async ({ commit, dispatch }) => {
     commit('CREATE_PROXY_REQUEST');
     try {
-      const params = [
-        'DSProxyRegistry',
-        config.addresses.dsProxyRegistry,
-        'build',
-        [],
-        {}
-      ];
+      const params = ['DSProxyRegistry', config.addresses.dsProxyRegistry,'build', [],{} ];
       const tx = await dispatch('sendTransaction', params);
       dispatch('notify', ['green', "You've successfully created a proxy"]);
       dispatch('getProxy');
       commit('CREATE_PROXY_SUCCESS');
       return tx;
-    } catch (e) {
+    } 
+    catch (e) {
       if (!e || isTxReverted(e)) {
         return e;
       }
@@ -121,10 +120,9 @@ const actions = {
       commit('CREATE_PROXY_FAILURE', e);
     }
   },
-  createPool: async (
-    { commit, dispatch, rootState },
-    { tokens, startBalances, startWeights, swapFee }
-  ) => {
+
+  // Creating a new Pool Functionality
+  createPool: async ( { commit, dispatch, rootState }, { tokens, startBalances, startWeights, swapFee }) => {
     commit('CREATE_POOL_REQUEST');
     const dsProxyAddress = rootState.web3.dsProxyAddress;
     try {
@@ -133,38 +131,20 @@ const actions = {
         const amount = bnum(amountInput);
         const tokenMetadata = rootState.web3.tokenMetadata[token];
         const decimals = tokenMetadata ? tokenMetadata.decimals : null;
-        return denormalizeBalance(amount, decimals)
-          .integerValue(BigNumber.ROUND_DOWN)
-          .toString();
+        return denormalizeBalance(amount, decimals).integerValue(BigNumber.ROUND_DOWN).toString();
       });
       startWeights = tokens.map(token => {
-        return toWei(startWeights[token])
-          .div(2)
-          .toString();
+        return toWei(startWeights[token]).div(2).toString();
       });
-      swapFee = toWei(swapFee)
-        .div(100)
-        .toString();
+      swapFee = toWei(swapFee).div(100).toString();
       const iface = new Interface(abi.BActions);
-      const data = iface.encodeFunctionData('create', [
-        config.addresses.bFactory,
-        tokens,
-        startBalances,
-        startWeights,
-        swapFee,
-        true
-      ]);
-      const params = [
-        'DSProxy',
-        dsProxyAddress,
-        'execute',
-        [config.addresses.bActions, data],
-        {}
-      ];
+      const data = iface.encodeFunctionData('create', [config.addresses.bFactory,tokens,startBalances,startWeights,swapFee,true]);
+      const params = ['DSProxy',dsProxyAddress,'execute',[config.addresses.bActions, data], {} ];
       await dispatch('sendTransaction', params);
       dispatch('notify', ['green', "You've successfully created a pool"]);
       commit('CREATE_POOL_SUCCESS');
-    } catch (e) {
+    } 
+    catch (e) {
       if (!e || isTxReverted(e)) {
         return e;
       }
@@ -172,42 +152,23 @@ const actions = {
       commit('CREATE_POOL_FAILURE', e);
     }
   },
-  joinPool: async (
-    { commit, dispatch, rootState },
-    { poolAddress, poolAmountOut, maxAmountsIn }
-  ) => {
+
+  //Joining Pools functionality
+  joinPool: async ( { commit, dispatch, rootState }, { poolAddress, poolAmountOut, maxAmountsIn } ) => {
     commit('JOIN_POOL_REQUEST');
     try {
       const dsProxyAddress = rootState.web3.dsProxyAddress;
       const iface = new Interface(abi.BActions);
-      const data = iface.encodeFunctionData('joinPool', [
-        getAddress(poolAddress),
-        poolAmountOut,
-        maxAmountsIn
-      ]);
-
-      console.log(
-        getAddress(poolAddress),
-        dsProxyAddress,
-        config.addresses.bActions,
-        poolAmountOut,
-        maxAmountsIn
-      );
-
-      const params = [
-        'DSProxy',
-        dsProxyAddress,
-        'execute',
-        [config.addresses.bActions, data],
-        {}
-      ];
-
+      const data = iface.encodeFunctionData('joinPool', [ getAddress(poolAddress), poolAmountOut, maxAmountsIn ]);
+      console.log( getAddress(poolAddress), dsProxyAddress, config.addresses.bActions, poolAmountOut, maxAmountsIn);
+      const params = [ 'DSProxy', dsProxyAddress, 'execute', [config.addresses.bActions, data], {} ];
       await dispatch('sendTransaction', params);
       await dispatch('getBalances');
       await dispatch('getMyPoolShares');
       dispatch('notify', ['green', "You've successfully added liquidity"]);
       commit('JOIN_POOL_SUCCESS');
-    } catch (e) {
+    } 
+    catch (e) {
       if (!e || isTxReverted(e)) {
         return e;
       }
@@ -215,44 +176,24 @@ const actions = {
       commit('JOIN_POOL_FAILURE', e);
     }
   },
-  joinswapExternAmountIn: async (
-    { commit, dispatch, rootState },
-    { poolAddress, tokenInAddress, tokenAmountIn, minPoolAmountOut }
-  ) => {
+
+  //JoinSwap functionality
+  joinswapExternAmountIn: async ( { commit, dispatch, rootState }, { poolAddress, tokenInAddress, tokenAmountIn, minPoolAmountOut } ) => {
     commit('JOINSWAP_EXTERN_AMOUNT_REQUEST');
     try {
       const dsProxyAddress = rootState.web3.dsProxyAddress;
       const iface = new Interface(abi.BActions);
-      const data = iface.encodeFunctionData('joinswapExternAmountIn', [
-        getAddress(poolAddress),
-        tokenInAddress,
-        tokenAmountIn,
-        minPoolAmountOut
-      ]);
-
-      console.log(
-        getAddress(poolAddress),
-        dsProxyAddress,
-        config.addresses.bActions,
-        tokenInAddress,
-        tokenAmountIn,
-        minPoolAmountOut
-      );
-
-      const params = [
-        'DSProxy',
-        dsProxyAddress,
-        'execute',
-        [config.addresses.bActions, data],
-        {}
-      ];
+      const data = iface.encodeFunctionData('joinswapExternAmountIn', [ getAddress(poolAddress), tokenInAddress, tokenAmountIn, minPoolAmountOut ]);
+      console.log( getAddress(poolAddress), dsProxyAddress,config.addresses.bActions,tokenInAddress, tokenAmountIn,minPoolAmountOut);
+      const params = [ 'DSProxy', dsProxyAddress, 'execute', [config.addresses.bActions, data], {} ];
 
       await dispatch('sendTransaction', params);
       await dispatch('getBalances');
       await dispatch('getMyPoolShares');
       dispatch('notify', ['green', "You've successfully added liquidity"]);
       commit('JOINSWAP_EXTERN_AMOUNT_SUCCESS');
-    } catch (e) {
+    } 
+    catch (e) {
       if (!e || isTxReverted(e)) {
         return e;
       }
@@ -260,25 +201,19 @@ const actions = {
       commit('JOINSWAP_EXTERN_AMOUNT_FAILURE', e);
     }
   },
-  exitPool: async (
-    { commit, dispatch },
-    { poolAddress, poolAmountIn, minAmountsOut }
-  ) => {
+
+  // Exit pool functionality
+  exitPool: async ( { commit, dispatch }, { poolAddress, poolAmountIn, minAmountsOut } ) => {
     commit('EXIT_POOL_REQUEST');
     try {
-      const params = [
-        'BPool',
-        poolAddress,
-        'exitPool',
-        [parseEther(poolAmountIn), minAmountsOut],
-        {}
-      ];
+      const params = ['BPool', poolAddress,'exitPool', [parseEther(poolAmountIn), minAmountsOut], {} ];
       await dispatch('sendTransaction', params);
       await dispatch('getBalances');
       await dispatch('getMyPoolShares');
       dispatch('notify', ['green', "You've successfully removed liquidity"]);
       commit('EXIT_POOL_SUCCESS');
-    } catch (e) {
+    } 
+    catch (e) {
       if (!e || isTxReverted(e)) {
         return e;
       }
@@ -286,29 +221,19 @@ const actions = {
       commit('EXIT_POOL_FAILURE', e);
     }
   },
-  exitswapPoolAmountIn: async (
-    { commit, dispatch },
-    { poolAddress, tokenOutAddress, poolAmountIn, minTokenAmountOut }
-  ) => {
+
+  // ExitSwap pool functionality
+  exitswapPoolAmountIn: async ( { commit, dispatch },{ poolAddress, tokenOutAddress, poolAmountIn, minTokenAmountOut } ) => {
     commit('EXITSWAP_POOL_AMOUNT_IN_REQUEST');
     try {
-      const params = [
-        'BPool',
-        poolAddress,
-        'exitswapPoolAmountIn',
-        [
-          getAddress(tokenOutAddress),
-          parseEther(poolAmountIn),
-          minTokenAmountOut
-        ],
-        {}
-      ];
+      const params = ['BPool', poolAddress,'exitswapPoolAmountIn', [getAddress(tokenOutAddress), parseEther(poolAmountIn), minTokenAmountOut], {} ];
       await dispatch('sendTransaction', params);
       await dispatch('getBalances');
       await dispatch('getMyPoolShares');
       dispatch('notify', ['green', "You've successfully removed liquidity"]);
       commit('EXITSWAP_POOL_AMOUNT_IN_SUCCESS');
-    } catch (e) {
+    } 
+    catch (e) {
       if (!e || isTxReverted(e)) {
         return e;
       }
@@ -316,25 +241,22 @@ const actions = {
       commit('EXITSWAP_POOL_AMOUNT_IN_FAILURE', e);
     }
   },
+
+  // Approve  functionality  
   approve: async ({ commit, dispatch, rootState }, token) => {
     commit('APPROVE_REQUEST');
     const spender = rootState.web3.dsProxyAddress;
     const tokenMetadata = rootState.web3.tokenMetadata[token];
     const symbol = tokenMetadata ? tokenMetadata.symbol : shorten(token);
     try {
-      const params = [
-        'TestToken',
-        getAddress(token),
-        'approve',
-        [spender, MAX_UINT.toString()],
-        {}
-      ];
+      const params = [ 'TestToken', getAddress(token),'approve', [spender, MAX_UINT.toString()], {} ];
       const tx = await dispatch('sendTransaction', params);
       await tx.wait(2);
       await dispatch('getAllowances', { tokens: [token], spender });
       dispatch('notify', ['green', `You've successfully unlocked ${symbol}`]);
       commit('APPROVE_SUCCESS');
-    } catch (e) {
+    } 
+    catch (e) {
       if (!e || isTxReverted(e)) {
         return e;
       }
@@ -342,23 +264,17 @@ const actions = {
       commit('APPROVE_FAILURE', e);
     }
   },
+
+  // Wrap Eth functionality
   wrap: async ({ commit, dispatch }, amount) => {
     commit('WRAP_ETH_REQUEST');
     try {
-      const params = [
-        'Weth',
-        config.addresses.weth,
-        'deposit',
-        [],
-        { value: parseEther(amount) }
-      ];
+      const params = ['Weth',  config.addresses.weth, 'deposit', [], { value: parseEther(amount) } ];
       await dispatch('sendTransaction', params);
-      dispatch('notify', [
-        'green',
-        `You've successfully wrapped ${amount} ether`
-      ]);
+      dispatch('notify', [ 'green', `You've successfully wrapped ${amount} ether`]);
       commit('WRAP_ETH_SUCCESS');
-    } catch (e) {
+    } 
+    catch (e) {
       if (!e || isTxReverted(e)) {
         return e;
       }
@@ -366,23 +282,17 @@ const actions = {
       commit('WRAP_ETH_FAILURE', e);
     }
   },
+
+  // Unwrap Eth functionality  
   unwrap: async ({ commit, dispatch }, amount) => {
     commit('UNWRAP_ETH_REQUEST');
     try {
-      const params = [
-        'Weth',
-        config.addresses.weth,
-        'withdraw',
-        [parseEther(amount)],
-        {}
-      ];
+      const params = [ 'Weth', config.addresses.weth,'withdraw', [parseEther(amount)], {}];
       await dispatch('sendTransaction', params);
-      dispatch('notify', [
-        'green',
-        `You've successfully unwrapped ${amount} ether`
-      ]);
+      dispatch('notify', ['green', `You've successfully unwrapped ${amount} ether`]);
       commit('UNWRAP_ETH_SUCCESS');
-    } catch (e) {
+    } 
+    catch (e) {
       if (!e || isTxReverted(e)) {
         return e;
       }

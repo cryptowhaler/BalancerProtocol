@@ -4,6 +4,7 @@ import modules from '@/store/modules';
 
 Vue.use(Vuex);
 
+// Set moudules in store
 const store = new Vuex.Store({
   modules,
   strict: process.env.NODE_ENV !== 'production'
