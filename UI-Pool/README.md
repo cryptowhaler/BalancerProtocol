@@ -22,6 +22,10 @@ npm run build
 npm run lint
 ```
 
-## License
+auth.ts --> Wallets / Connectors added to vue
 
-[GPL-3.0](LICENSE).
+Tokens are listed in 'assets/generated/pm/' node module files
+
+Components/Modal/Account --> pop up when clicked on connect wallet / address when logged in
+Components/Modal/About --> pop up when clicked on About
+

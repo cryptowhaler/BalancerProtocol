@@ -181,8 +181,9 @@ const mutations = {
 
 const actions = {
 
-  // connecting
+  // Logging In
   login: async ({ dispatch }, connector = 'injected') => {
+    // getInstance is imported from @bonustrack/lock/plugins/vue
     auth = getInstance();
     await auth.login(connector);
     if (auth.provider) {
@@ -198,50 +199,7 @@ const actions = {
     commit('CLEAR_USER');
   },
 
-  // token data
-  initTokenMetadata: async ({ commit }) => {
-    const metadata = Object.fromEntries(
-      Object.entries(config.tokens).map(tokenEntry => {
-        const { decimals, symbol, name } = tokenEntry[1] as any;
-        return [ tokenEntry[0], { decimals,symbol,name,whitelisted: true} ];
-      })
-    );
-    commit('LOAD_TOKEN_METADATA_SUCCESS', metadata);
-  },
-
-  // Load token data
-  loadTokenMetadata: async ({ commit }, tokens) => {
-    commit('LOAD_TOKEN_METADATA_REQUEST');
-    const multi = new Contract(config.addresses.multicall, abi['Multicall'], web3);
-    const calls = [];
-    const testToken = new Interface(abi.TestToken);
-    tokens.forEach(token => {
-      // @ts-ignore
-      calls.push([token, testToken.encodeFunctionData('decimals', [])]);
-      // @ts-ignore
-      calls.push([token, testToken.encodeFunctionData('symbol', [])]);
-      // @ts-ignore
-      calls.push([token, testToken.encodeFunctionData('name', [])]);
-    });
-    const tokenMetadata: any = {};
-    try {
-      const [, response] = await multi.aggregate(calls);
-      for (let i = 0; i < tokens.length; i++) {
-        const [decimals] = testToken.decodeFunctionResult('decimals',response[3 * i]);
-        const [symbol] = testToken.decodeFunctionResult('symbol',response[3 * i + 1]);
-        const [name] = testToken.decodeFunctionResult('name',response[3 * i + 2]);
-        tokenMetadata[tokens[i]] = { decimals, symbol, name};
-      }
-      commit('LOAD_TOKEN_METADATA_SUCCESS', tokenMetadata);
-      return tokenMetadata;
-    } 
-    catch (e) {
-      commit('LOAD_TOKEN_METADATA_FAILURE', e);
-      return Promise.reject();
-    }
-  },
-
-  // Web3
+  // Called when Logging in
   loadWeb3: async ({ commit, dispatch }) => {
     commit('LOAD_WEB3_REQUEST');
     try {
@@ -264,7 +222,7 @@ const actions = {
     }
   },
 
-  // Load Provider
+  // called from LoadWeb3 under certain conditions
   loadProvider: async ({ commit, dispatch }) => {
     commit('LOAD_PROVIDER_REQUEST');
     try {
@@ -310,7 +268,7 @@ const actions = {
     }
   },
 
-  // Load backUp provider
+  // Called from LoadWeb3 when proper provider is not available
   loadBackupProvider: async ({ commit }) => {
     commit('LOAD_BACKUP_PROVIDER_REQUEST');
     try {
@@ -323,6 +281,50 @@ const actions = {
       return Promise.reject();
     }
   },
+
+  // token data
+  initTokenMetadata: async ({ commit }) => {
+    const metadata = Object.fromEntries(
+      Object.entries(config.tokens).map(tokenEntry => {
+        const { decimals, symbol, name } = tokenEntry[1] as any;
+        return [ tokenEntry[0], { decimals,symbol,name,whitelisted: true} ];
+      })
+    );
+    commit('LOAD_TOKEN_METADATA_SUCCESS', metadata);
+  },
+
+  // Load token data
+  loadTokenMetadata: async ({ commit }, tokens) => {
+    commit('LOAD_TOKEN_METADATA_REQUEST');
+    const multi = new Contract(config.addresses.multicall, abi['Multicall'], web3);
+    const calls = [];
+    const testToken = new Interface(abi.TestToken);
+    tokens.forEach(token => {
+      // @ts-ignore
+      calls.push([token, testToken.encodeFunctionData('decimals', [])]);
+      // @ts-ignore
+      calls.push([token, testToken.encodeFunctionData('symbol', [])]);
+      // @ts-ignore
+      calls.push([token, testToken.encodeFunctionData('name', [])]);
+    });
+    const tokenMetadata: any = {};
+    try {
+      const [, response] = await multi.aggregate(calls);
+      for (let i = 0; i < tokens.length; i++) {
+        const [decimals] = testToken.decodeFunctionResult('decimals',response[3 * i]);
+        const [symbol] = testToken.decodeFunctionResult('symbol',response[3 * i + 1]);
+        const [name] = testToken.decodeFunctionResult('name',response[3 * i + 2]);
+        tokenMetadata[tokens[i]] = { decimals, symbol, name};
+      }
+      commit('LOAD_TOKEN_METADATA_SUCCESS', tokenMetadata);
+      return tokenMetadata;
+    } 
+    catch (e) {
+      commit('LOAD_TOKEN_METADATA_FAILURE', e);
+      return Promise.reject();
+    }
+  },
+
 
   // Address LookUp
   lookupAddress: async ({ commit }) => {
@@ -377,12 +379,14 @@ const actions = {
     }
   },
 
-  // Load Account
+  // Account is loaded when logging in
   loadAccount: async ({ dispatch }) => {
     if (!state.account) {
       return;
     }
     // @ts-ignore
+    console.log(config);
+    console.log(config.tokens);
     const tokens = Object.entries(config.tokens).map(token => token[1].address);
     await dispatch('getProxy');
     await Promise.all([

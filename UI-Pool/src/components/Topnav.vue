@@ -5,11 +5,8 @@
         <a class="d-block d-xl-none text-white" @click="toggleSidebar">
           <Icon name="menu" size="28" class="mr-3" />
         </a>
-        <router-link
-          :to="{ name: 'home' }"
-          class="d-inline-block text-blue d-flex"
-          style="padding-top: 2px;"
-        >
+        <!-- LOGO and 'Balancer' Name -->
+        <router-link :to="{ name: 'home' }" class="d-inline-block text-blue d-flex" style="padding-top: 2px;">
           <img
             src="~/@/assets/logo.svg"
             class="mr-2 v-align-middle"
@@ -23,7 +20,9 @@
           />
         </router-link>
       </div>
+      <!-- Wallets -->
       <div :key="web3.account">
+        <!-- If logged in -->
         <template v-if="$auth.isAuthenticated && !wrongNetwork">
           <UiButton @click="modalOpen = true" :loading="loading">
             <Avatar :address="web3.account" size="16" class="mr-2 ml-n1" />
@@ -31,28 +30,28 @@
             <span v-else v-text="_shorten(web3.account)" />
           </UiButton>
         </template>
+        <!-- If wrong network -->
         <UiButton v-if="web3.injectedLoaded && wrongNetwork" class="button-red">
           <Icon name="warning" class="ml-n2 mr-1 v-align-middle" />
           Wrong network
         </UiButton>
-        <UiButton
-          v-if="showLogin"
-          @click="modalOpen = true"
-          :loading="loading"
-          class="button-primary"
-        >
+        <!-- If not logged in -->
+        <UiButton  v-if="showLogin"  @click="modalOpen = true"  :loading="loading"  class="button-primary">
           Connect wallet
         </UiButton>
+        <!-- About Button -->
         <UiButton @click="modalAboutOpen = true" class="ml-2 hide-sm">
-          <span v-text="'?'" class="ml-n1 mr-n1" />
+          <span v-text="'About'" class="ml-n1 mr-n1" />
         </UiButton>
       </div>
     </div>
+    <!-- POP UP when clicked on Connect Wallet (when not logged in) / Address (when logged in) button -->
     <ModalAccount
       :open="modalOpen"
       @close="modalOpen = false"
       @login="handleLogin"
     />
+    <!-- POP UP when clicked on About Button -->
     <ModalAbout :open="modalAboutOpen" @close="modalAboutOpen = false" />
   </nav>
 </template>
@@ -61,6 +60,7 @@
 import { mapActions } from 'vuex';
 
 export default {
+
   data() {
     return {
       loading: false,
@@ -68,20 +68,21 @@ export default {
       modalAboutOpen: false
     };
   },
+
   computed: {
     wrongNetwork() {
       return this.config.chainId !== this.web3.injectedChainId;
     },
     showLogin() {
-      return (
-        (!this.$auth.isAuthenticated && !this.web3.injectedLoaded) ||
-        (!this.$auth.isAuthenticated && !this.wrongNetwork)
-      );
+      return (  (!this.$auth.isAuthenticated && !this.web3.injectedLoaded) || (!this.$auth.isAuthenticated && !this.wrongNetwork)  );
     }
   },
+
   methods: {
+
     ...mapActions(['toggleSidebar']),
     ...mapActions(['login']),
+
     async handleLogin(connector) {
       this.modalOpen = false;
       this.loading = true;
