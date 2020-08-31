@@ -24,6 +24,7 @@ const mutations = {
 };
 
 const actions = {
+
   // Getting prices from coingecko
   loadPricesById: async ({ commit }, payload) => {
     commit('GET_PRICE_REQUEST');
@@ -54,7 +55,7 @@ const actions = {
     commit('GET_PRICE_SUCCESS', prices);
   },
 
-
+  // get price based on contract address from coingecko
   loadPricesByAddress: async ({ commit }, payload) => {
     commit('GET_PRICE_REQUEST');
     const contractString = payload.join('%2C');

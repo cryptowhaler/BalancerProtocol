@@ -3,6 +3,8 @@ import { getAddress } from '@ethersproject/address';
 import { request } from '@/helpers/subgraph';
 import { formatPool, ITEMS_PER_PAGE } from '@/helpers/utils';
 
+// Request function from helpers is used to 
+
 const state = {
   balancer: {},
   poolShares: {},
@@ -246,7 +248,7 @@ const actions = {
     }
   },
 
-
+  // Graph protocol 
   getPoolShares: async ({ commit }, payload) => {
     commit('GET_POOLS_SHARES_REQUEST');
     try {
