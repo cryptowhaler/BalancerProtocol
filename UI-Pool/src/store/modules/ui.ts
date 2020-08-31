@@ -26,6 +26,7 @@ const mutations = {
 
 const actions = {
 
+  //Called when page is loaded (in app)
   init: async ({ commit, dispatch }) => {
     commit('SET', { loading: true });
     const tokenIds = Object.keys(config.tokens).map(tokenAddress => config.tokens[tokenAddress].id).filter(tokenId => !!tokenId);
@@ -41,10 +42,12 @@ const actions = {
     commit('SET', { loading: payload });
   },
 
+  //For mobile (sidebar handling)
   toggleSidebar: ({ commit }) => {
     commit('SET', { sidebarIsOpen: !state.sidebarIsOpen });
   },
-  
+
+  //For mobile (sidebar handling)  
   hideSidebar: ({ commit }) => {
     commit('SET', { sidebarIsOpen: false });
   }

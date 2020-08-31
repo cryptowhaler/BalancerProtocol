@@ -282,7 +282,7 @@ const actions = {
     }
   },
 
-  // token data
+  // token data (called by init in ui.ts)
   initTokenMetadata: async ({ commit }) => {
     const metadata = Object.fromEntries(
       Object.entries(config.tokens).map(tokenEntry => {
@@ -293,7 +293,7 @@ const actions = {
     commit('LOAD_TOKEN_METADATA_SUCCESS', metadata);
   },
 
-  // Load token data
+  // Load token data [called from SelectToken.vue and Pool.vue ]
   loadTokenMetadata: async ({ commit }, tokens) => {
     commit('LOAD_TOKEN_METADATA_REQUEST');
     const multi = new Contract(config.addresses.multicall, abi['Multicall'], web3);
@@ -326,11 +326,12 @@ const actions = {
   },
 
 
-  // Address LookUp
+  // Address LookUp [called from loadAccount]
   lookupAddress: async ({ commit }) => {
     commit('LOOKUP_ADDRESS_REQUEST');
     try {
       const name = await web3.lookupAddress(state.account);
+      console.log('lookupAddressSuccess' + name);
       commit('LOOKUP_ADDRESS_SUCCESS', name);
       return name;
     } 
@@ -339,7 +340,7 @@ const actions = {
     }
   },
 
-  // Resolve Name
+  // Resolve Name [not being called]
   resolveName: async ({ commit }, payload) => {
     commit('RESOLVE_NAME_REQUEST');
     try {
@@ -352,7 +353,7 @@ const actions = {
     }
   },
 
-  // Send Transaction
+  // Send Transaction [handles all transactions]
   sendTransaction: async ({ commit }, [contractType, contractAddress, action, params, overrides] ) => {
     commit('SEND_TRANSACTION_REQUEST');
     try {
@@ -385,20 +386,27 @@ const actions = {
       return;
     }
     // @ts-ignore
-    console.log(config);
-    console.log(config.tokens);
+    // console.log(config);
+    // console.log(config.tokens);
+    // Mapping token to its address
     const tokens = Object.entries(config.tokens).map(token => token[1].address);
+    // Proxy used to keep contracts upgradable
     await dispatch('getProxy');
     await Promise.all([
+      //
       dispatch('lookupAddress'),
+      // Getting token Balances [Uses Multicall ABI and testToken Interface]
       dispatch('getBalances', tokens),
+      // Getting allowances [Uses Multicall ABI and testToken Interface]
       dispatch('getAllowances', { tokens, spender: state.dsProxyAddress }),
+      // queried from graph protocol
       dispatch('getMyPools'),
+      // queried from graph protocol
       dispatch('getMyPoolShares')
     ]);
   },
 
-  // Get Balances
+  // Get Balances [Uses Multicall ABI and testToken Interface] [called from loadAccount and joinPool, joinswapExternAmountIn, exitPool, exitswapPoolAmountIn in broadcast.ts]
   getBalances: async ({ commit }, tokens) => {
     commit('GET_BALANCES_REQUEST');
     const address = state.account;
@@ -410,15 +418,20 @@ const actions = {
     tokensToFetch.forEach(token => {
       // @ts-ignore
       calls.push([token, testToken.encodeFunctionData('balanceOf', [address])]);
+      console.log(calls);
     });
     promises.push(multi.aggregate(calls));
+    console.log(promises);
     promises.push(multi.getEthBalance(address));
+    console.log(promises);
     const balances: any = {};
     try {
       // @ts-ignore
       const [[, response], ethBalance] = await Promise.all(promises);
       // @ts-ignore
       balances.ether = ethBalance.toString();
+      // console.log(response);
+      // console.log(ethBalance);
       let i = 0;
       response.forEach(value => {
         if (tokensToFetch && tokensToFetch[i]) {
@@ -427,6 +440,7 @@ const actions = {
         }
         i++;
       });
+      console.log(balances);
       commit('GET_BALANCES_SUCCESS', balances);
       return balances;
     } 
@@ -436,7 +450,7 @@ const actions = {
     }
   },
 
-  // Get Allowances
+  // Get Allowances [called from loadAccount and approve function in broadcast.ts]
   getAllowances: async ({ commit }, { tokens, spender }) => {
     commit('GET_ALLOWANCES_REQUEST');
     if (!spender) {
@@ -470,6 +484,7 @@ const actions = {
         }
         i++;
       });
+      console.log(allowances);
       commit('GET_ALLOWANCES_SUCCESS', allowances);
       return allowances;
     } 
@@ -479,13 +494,17 @@ const actions = {
     }
   },
 
-  // Get Proxy
+  // Getting Proxy (used to keep contracts upgradable) [called from loadAccount and  broadcast.ts (when creating proxy) ]
   getProxy: async ({ commit }) => {
     commit('GET_PROXY_REQUEST');
+    //current account address
     const address = state.account;
+    console.log(address);
     try {
       const dsProxyRegistryContract = new Contract( config.addresses.dsProxyRegistry, abi['DSProxyRegistry'], web3 );
+      console.log(dsProxyRegistryContract);
       const proxy = await dsProxyRegistryContract.proxies(address);
+      console.log(proxy);
       commit('GET_PROXY_SUCCESS', proxy);
       return proxy;
     } 

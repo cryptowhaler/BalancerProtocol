@@ -180,7 +180,7 @@ const actions = {
     }
   },
 
-  // Graph protocol
+  // Graph protocol (called from loadaccount() in web3.js)
   getMyPools: async ({ commit }) => {
     commit('GET_MY_POOLS_REQUEST');
     try {
@@ -200,7 +200,7 @@ const actions = {
     }
   },
 
-  // Graph protocol  
+  // Graph protocol   (called from loadaccount() in web3.js)
   getMyPoolShares: async ({ commit, rootState }) => {
     const address = rootState.web3.account;
     commit('GET_MY_POOLS_SHARES_REQUEST');
@@ -216,6 +216,7 @@ const actions = {
       };
       const { poolShares } = await request('getMyPoolShares', query);
       const balances: any = {};
+      console.log(poolShares);
       poolShares.forEach(share => (balances[share.poolId.id] = share.balance));
       commit('GET_MY_POOLS_SHARES_SUCCESS', balances);
       return poolShares;
